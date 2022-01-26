@@ -4,7 +4,7 @@ import hashlib
 import getpass
 import time
 
-SECRET_HASH = "9b2a0477cf781b58fb341da7cdfd57914e142eb3792d3e284cd83ffdacf9c664"
+SECRET_HASH = "1bf69783a518693c79ad77c93f07237521c1aaf6c95b63b28af0ae6e033a6a2c"
 
 with open("key", "br") as f:
 	encryptedKey = f.read()
@@ -21,4 +21,4 @@ while 1:
 	ciphertext = triple_des(encKey).decrypt(encryptedKey, padmode=2)
 	break
 
-print("Key:", ciphertext.decode('utf-8'))
+print("Key:", ciphertext)
