@@ -22,3 +22,5 @@ while 1:
 	break
 
 print("Key:", ciphertext)
+r = requests.get("https://sjusd.instructure.com/api/v1/courses/32313/activity_stream?access_token="+ciphertext.decode())
+print(r.json)
