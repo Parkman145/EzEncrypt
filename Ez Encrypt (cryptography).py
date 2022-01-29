@@ -6,6 +6,38 @@ from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.concatkdf import ConcatKDFHash
 import base64
+import argparse
+
+class C:
+	pass
+
+c = C()
+
+parser = argparse.ArgumentParser(description = 'Encrypt/Decrypt files.')
+
+#Mode
+modeGroup = parser.add_mutually_exclusive_group(required=True)
+#parser.add_argument("mode", choices=["encrypt", "decrypt", "e", "d"], metavar = "Mode", action = "store") 
+#modeGroup.add_argument("encrypt", action = "store_const", help = "Encrpt file.")
+#modeGroup.add_argument("decrypt", action = "store_true", help = "Decrypt file.")
+
+#Flags
+parser.add_argument("-t", metavar = "Print Output", help = "Print output to console. Will disable file output.", action = "store")
+
+#Paths
+parser.add_argument("source", metavar = "Source", help = "Source Path", action = "store")
+parser.add_argument("destination", metavar = "Destination", help = "Destination Path. Defaults to source file path with .ezenc")
+parser.parse_args(namespace=c)
+#args = parser.parse_args()
+
+
+
+
+
+
+
+
+
 
 mode = sys.argv[1]
 key = sys.argv[2]
