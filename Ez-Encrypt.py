@@ -94,7 +94,11 @@ if __name__ == "__main__":
 
 
 	if (c.t):
-		print(newData.decode())
+		try:
+			print(newData.decode())
+		except UnicodeDecodeError:
+			print("Error: Cannot print binary file to console.")
+			exit()
 	else:
 		if (c.f is None):
 			if (mode == "encrypt"):
