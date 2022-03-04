@@ -1,0 +1,2 @@
+- [ ] Replace Mode argument with flags
+	- [ ] Add append Flag
