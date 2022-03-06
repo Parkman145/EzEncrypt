@@ -67,7 +67,7 @@ if __name__ == "__main__":
 	parser = argparse.ArgumentParser(description='Encrypt/Decrypt files.')
 
 	#Mode
-	modeGroup = parser.add_subparsers(dest="mode")
+	modeGroup = parser.add_subparsers(dest="mode", required=True)
 
 	#Encrypt Mode
 	encryptMode = modeGroup.add_parser("e", help="Encrypt file")
@@ -107,6 +107,7 @@ if __name__ == "__main__":
 			fileData = f.read()
 	except FileNotFoundError:
 		print("Source file ", sourcePath, "not found")
+		exit()
 
 	newData = c.func(c, fileData, encKey)
 
