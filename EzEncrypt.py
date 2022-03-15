@@ -58,6 +58,57 @@ def append_mode(data, key, text):
 	return fernet.encrypt(data.encode())
 
 
+def process_file(source, mode, key, destination=None, suppress_confirmation=False, **kwargs):
+	#Open File
+	try:
+		with open(source, "br") as f:
+			fileData = f.read()
+	except FileNotFoundError:
+		print("Source file ", sourcePath, "not found")
+#DONT FORGET		exit()
+
+	encKey = derive_key(key)
+	match mode:
+		case "e":
+			newData = encrypt_mode(fileData, encKey)
+		case "d":
+			newData = decrypt_mode(fileData, encKey, console_output=kwargs.get("console_output"))
+		case "a":
+			newData = append_mode(fileData, encKey, kwargs.get("text"))
+	if destination is None:
+		match mode:
+			case "e":
+				destinationPath = sourcePath + ".ezenc"
+			case "d":
+				if sourcePath.endswith(".ezenc"):
+					destinationPath = sourcePath[:-6]
+				else:
+					destinationPath = os.path.splitext(sourcePath)[0] + "[DECRYPTED]" + os.path.splitext(sourcePath)[1]
+			case "a":
+				destinationPath = source
+	else:
+		destinationPath = destination
+
+
+	#Write to File
+	try:
+		f = open(destinationPath, "xb")
+	except FileExistsError:
+		print()
+		if suppress_confirmation or input("File {} already exists.\nWould you like to overwrite? (y/n)".format(destinationPath)).lower() == "y":
+			try:
+				f = open(destinationPath, "wb+")
+			except:
+				print("Fuck")
+		else:
+			print("File write cancelled.")
+			exit()
+	f.write(newData)
+	f.close()
+	print("File output to", destinationPath)
+
+
+
 class C:
 	pass
 
@@ -105,43 +156,4 @@ if __name__ == "__main__":
 		exit()
 
 	key = getpass.getpass()
-	encKey = derive_key(key)
-	match c.mode:
-		case "e":
-			newData = encrypt_mode(fileData, encKey)
-		case "d":
-			newData = decrypt_mode(fileData, encKey, console_output=c.t)
-		case "a":
-			newData = append_mode(fileData, encKey, c.text)
-	if c.f is None:
-		match c.mode:
-			case "e":
-				destinationPath = sourcePath + ".ezenc"
-			case "d":
-				if sourcePath.endswith(".ezenc"):
-					destinationPath = sourcePath[:-6]
-				else:
-					destinationPath = os.path.splitext(sourcePath)[0] + "[DECRYPTED]" + os.path.splitext(sourcePath)[1]
-			case "a":
-				destinationPath = c.source
-	else:
-		destinationPath = c.f
-
-
-	#Write to File
-	print(c.source)
-	try:
-		f = open(destinationPath, "xb")
-	except FileExistsError:
-		print("File {} already exists.\nWould you like to overwrite?".format(destinationPath))
-		if input("(y/n)").lower() == "y":
-			try:
-				f = open(destinationPath, "wb+")
-			except:
-				print("Fuck")
-		else:
-			print("File write cancelled.")
-			exit()
-	f.write(newData)
-	f.close()
-	print("File output to", destinationPath)
+	process_file()
