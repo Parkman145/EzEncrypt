@@ -19,21 +19,21 @@ def derive_key(key):
 	return ckdf.derive(key.encode())
 
 
-def encrypt_mode(args, data, key):
+def encrypt_mode(data, key):
 
 	fernet = Fernet(base64.urlsafe_b64encode(key))
 	data = fernet.encrypt(data)
 	return data
 
 
-def decrypt_mode(args, data, key):
+def decrypt_mode(data, key, console_output=False):
 	fernet = Fernet(base64.urlsafe_b64encode(key))
 	try:
 		data = fernet.decrypt(data)
 	except InvalidToken:
 		print("Invalid Token")
 		exit()
-	if args.t:
+	if console_output:
 		try:
 			print(data.decode())
 			exit()
@@ -44,7 +44,7 @@ def decrypt_mode(args, data, key):
 		return data
 
 
-def append_mode(args, data, key):
+def append_mode(data, key, text):
 	fernet = Fernet(base64.urlsafe_b64encode(key))
 	try:
 		data = fernet.decrypt(data).decode()
@@ -54,7 +54,7 @@ def append_mode(args, data, key):
 	except UnicodeDecodeError:
 		print("Invalid Text Encoding")
 		exit()
-	data = data + args.text
+	data = data + "\n" + text
 	return fernet.encrypt(data.encode())
 
 
@@ -73,7 +73,6 @@ if __name__ == "__main__":
 	encryptMode = modeGroup.add_parser("e", help="Encrypt file")
 	encryptMode.add_argument("source", metavar="Source", help="Source Path", action="store")
 	encryptMode.add_argument("-f", metavar="Destination", help="Write to custom file.")
-	encryptMode.set_defaults(func=encrypt_mode)
 
 
 	#Decrypt Mode
@@ -81,7 +80,6 @@ if __name__ == "__main__":
 	decryptMode.add_argument("source", metavar="Source", help="Source Path", action="store")
 	decryptMode.add_argument("-f", metavar="Destination", help="Write to custom file.")
 	decryptMode.add_argument("-t", help="Print output to console. Will disable file output.", action="store_true")
-	decryptMode.set_defaults(func=decrypt_mode)
 
 
 	#Append Mode
@@ -89,17 +87,14 @@ if __name__ == "__main__":
 	appendMode.add_argument("source", metavar="Source", help="Source Path", action="store")
 	appendMode.add_argument("text", metavar="Text", help="Text To Append", action="store")
 	appendMode.add_argument("-f", metavar="Destination", help="Write to custom file.")
-	appendMode.set_defaults(func=append_mode)
 
 
 	parser.parse_args(namespace=c)
 
 
-	key = getpass.getpass()
 	sourcePath = c.source
 
 	#Derive Key
-	encKey = derive_key(key)
 
 	#Open File
 	try:
@@ -109,8 +104,15 @@ if __name__ == "__main__":
 		print("Source file ", sourcePath, "not found")
 		exit()
 
-	newData = c.func(c, fileData, encKey)
-
+	key = getpass.getpass()
+	encKey = derive_key(key)
+	match c.mode:
+		case "e":
+			newData = encrypt_mode(fileData, encKey)
+		case "d":
+			newData = decrypt_mode(fileData, encKey, console_output=c.t)
+		case "a":
+			newData = append_mode(fileData, encKey, c.text)
 	if c.f is None:
 		match c.mode:
 			case "e":
@@ -131,7 +133,7 @@ if __name__ == "__main__":
 	try:
 		f = open(destinationPath, "xb")
 	except FileExistsError:
-		print("File", destinationPath, "already exists.\nWould you like to overwrite?")
+		print("File {} already exists.\nWould you like to overwrite?".format(destinationPath))
 		if input("(y/n)").lower() == "y":
 			try:
 				f = open(destinationPath, "wb+")
