@@ -1,2 +1,5 @@
-- [ ] Replace Mode argument with flags
-	- [ ] Add append Flag
+- [x] Add append Flag
+- [ ] Add help
+- [ ] Update README.md
+- [ ] Make File Encryption/Decryption a function
+- [ ] Add batch File Encryption/Decryption
