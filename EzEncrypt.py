@@ -8,6 +8,22 @@ import argparse
 import os
 
 
+def makefilename(originalpath, mode, overidepath):
+	if overidepath is None:
+		match mode:
+			case "e":
+				return originalpath + ".ezenc"
+			case "d":
+				if originalpath.endswith(".ezenc"):
+					return originalpath[:-6]
+				else:
+					return os.path.splitext(originalpath)[0] + "[DECRYPTED]" + os.path.splitext(originalpath)[1]
+			case "a":
+				return originalpath
+	else:
+		return overidepath
+
+
 #Derive Key
 def derive_key(key):
 
@@ -94,54 +110,62 @@ if __name__ == "__main__":
 
 	sourcePath = c.source
 
+	if not os.path.exists(sourcePath):
+		raise Exception("Path Not Found")
+
+
+	if os.path.isfile(sourcePath):
+		sourcePaths = [sourcePath]
+		destinationPaths = [makefilename(sourcePath, c.mode, c.f)]
+	elif os.path.isdir(sourcePath):
+		sourcePaths = os.listdir(sourcePath)
+		destinationPaths = []
+		for name in sourcePaths:
+			if c.f is None:
+				destinationPath = sourcePath + "_ezenc"
+			destinationPaths.append(makefilename(sourcePath, c.mode, c.f))
+		if os.path.isfile(destinationPath):
+			raise Exception("Destination path must be a directory for batch encryption/decryption")
+
+
+	os.mkdir(destinationPath)
 	#Derive Key
-
-	#Open File
-	try:
-		with open(sourcePath, "br") as f:
-			fileData = f.read()
-	except FileNotFoundError:
-		print("Source file ", sourcePath, "not found")
-		exit()
-
 	key = getpass.getpass()
 	encKey = derive_key(key)
-	match c.mode:
-		case "e":
-			newData = encrypt_mode(fileData, encKey)
-		case "d":
-			newData = decrypt_mode(fileData, encKey, console_output=c.t)
-		case "a":
-			newData = append_mode(fileData, encKey, c.text)
-	if c.f is None:
+	for filename in files:
+		#Open File
+		path = sourcePath + "/" + filename
+		try:
+			with open(path, "br") as f:
+				fileData = f.read()
+		except FileNotFoundError:
+			print("Source file ", path, "not found")
+			exit()
+
+
 		match c.mode:
 			case "e":
-				destinationPath = sourcePath + ".ezenc"
+				newData = encrypt_mode(fileData, encKey)
 			case "d":
-				if sourcePath.endswith(".ezenc"):
-					destinationPath = sourcePath[:-6]
-				else:
-					destinationPath = os.path.splitext(sourcePath)[0] + "[DECRYPTED]" + os.path.splitext(sourcePath)[1]
+				newData = decrypt_mode(fileData, encKey, console_output=c.t)
 			case "a":
-				destinationPath = c.source
-	else:
-		destinationPath = c.f
+				newData = append_mode(fileData, encKey, c.text)
 
 
-	#Write to File
-	print(c.source)
-	try:
-		f = open(destinationPath, "xb")
-	except FileExistsError:
-		print("File {} already exists.\nWould you like to overwrite?".format(destinationPath))
-		if input("(y/n)").lower() == "y":
-			try:
-				f = open(destinationPath, "wb+")
-			except:
-				print("Fuck")
-		else:
-			print("File write cancelled.")
-			exit()
-	f.write(newData)
-	f.close()
-	print("File output to", destinationPath)
+		#Write to File
+		print(c.source)
+		try:
+			f = open(destinationPath, "xb")
+		except FileExistsError:
+			print("File {} already exists.\nWould you like to overwrite?".format(destinationPath))
+			if input("(y/n)").lower() == "y":
+				try:
+					f = open(destinationPath, "wb+")
+				except:
+					print("Fuck")
+			else:
+				print("File write cancelled.")
+				exit()
+		f.write(newData)
+		f.close()
+		print("File output to", destinationPath)
